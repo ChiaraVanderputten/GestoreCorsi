@@ -11,6 +11,7 @@ import java.util.ResourceBundle;
 
 import it.polito.tdp.corsi.model.Corso;
 import it.polito.tdp.corsi.model.Model;
+import it.polito.tdp.corsi.model.Studente;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -73,15 +74,29 @@ public class FXMLController {
     	}
     	
     	if(periodo<1||periodo>2) {
-    		txtRisultato.setText("Devi inserire un numero (1 o 2) per il periodo didattico");
-    	     return;
+        	
+    		txtRisultato.setText("Devi inserire un numero per il periodo didattico");
+     	     return;
     	    		 }
     		
     	List <Corso> corsi = model.getCorsiByPeriodo(periodo);
+//    	for(Corso c : corsi) {
+//    		txtRisultato.appendText(c.toString()+"\n");
+//    	}
+    	
+    	
+    	StringBuilder sb = new StringBuilder();
     	for(Corso c : corsi) {
-    		txtRisultato.appendText(c.toString()+"\n");
+   		sb.append(String.format("%-8s ", c.getCodins()));  //così incolloniamo il testo
+    	sb.append(String.format("%-4d ", c.getCrediti())); 	
+    	sb.append(String.format("%-50s ", c.getNome()));
+    	sb.append(String.format("%-4d\n", c.getPd())); 
+    	// %=placeorder - cioè va allineato a sinistra, un numero per lo spazione (metto
+    	    //8 perchè è sufficiente)
+    	//si potevano mettere anche in unica sb.append non per forza farli tutti singoli
     	}
     	
+    	txtRisultato.appendText(sb.toString());
     }
 
     @FXML
@@ -92,9 +107,6 @@ public class FXMLController {
        //metodo del primo bottone
     	String periodoStringa =  txtPeriodo.getText();
     	Integer periodo;
-    	
-    	
-    
     	
     	//controlliamo che il periodo abbia senso
     	try {
@@ -116,10 +128,11 @@ public class FXMLController {
     	}
     	
     	Map<Corso, Integer> corsiIscrizioni = this.model.getIscrittiByPeriodo(periodo);
+    	StringBuilder sb = new StringBuilder();
+    	
     	for(Corso c : corsiIscrizioni.keySet()) {
-    		txtRisultato.appendText(c.toString());
-    		Integer n = corsiIscrizioni.get(c);
-    		txtRisultato.appendText("\t" + n + "\n");
+    		sb.append(String.format("%-50s %4d\n", c.getNome(), corsiIscrizioni.get(c)));
+    		txtRisultato.appendText(sb.toString());
     	}
     	
     	
@@ -127,11 +140,47 @@ public class FXMLController {
 
     @FXML
     void stampaDivisione(ActionEvent event) {
-
+    	
+         txtRisultato.clear();
+    	
+    	String codice = this.txtCorso.getText();
+    	
+    	if(!model.esisteCorso(codice)) {
+    		txtRisultato.appendText("Il corso non esiste");
+    		return;
+    	}
+    	
+    	Map<String,Integer> divisione = model.getDivisioneCDS(codice);
+    	
+    	for(String cds: divisione.keySet())
+    		txtRisultato.appendText(String.format("%-8s %4d\n", cds,divisione.get(cds)));
     }
 
     @FXML
     void stampaStudenti(ActionEvent event) {
+    	
+    	txtRisultato.clear();
+    	
+    	String codice = this.txtCorso.getText();
+    	
+    	if(!model.esisteCorso(codice)) {
+    		txtRisultato.appendText("Il corso non esiste");
+    		return;
+    	}
+    	
+    	List<Studente> studenti = model.getStudenteByCorso(codice);
+    	
+    	
+    	if(studenti.size() == 0) {
+    		this.txtRisultato.appendText("Il corso non ha iscritti");
+    		return; //non controlla se il codice però esiste
+    	}
+    	
+    	
+    	for(Studente s : studenti) {
+    		
+    		txtRisultato.appendText(String.format("%-9d %-20s %-20s %-9s\n", s.getMatricola(), s.getNome(), s.getCognome(), s.getCDS()));
+    	}
 
     }
 
@@ -149,6 +198,7 @@ public class FXMLController {
     
     public void setModel(Model model) {
     	this.model = model;
+    	txtRisultato.setStyle("-fx-font-family: monospace");
     }
    
     
